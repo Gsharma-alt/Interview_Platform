@@ -7,7 +7,7 @@ function Footer() {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-300">InterviewCoach</h3>
+            <h3 className="text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-purple-300">InterviewPro</h3>
             <p className="mt-2 text-purple-200">
               Empowering job seekers with AI-powered interview preparation tools.
             </p>

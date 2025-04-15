@@ -18,7 +18,8 @@ export default function MockInterviewScheduler() {
     const mentors = [
         { id: 1, name: "Alex Johnson", expertise: "Frontend Development", rating: 4.9 },
         { id: 2, name: "Sarah Williams", expertise: "Backend Engineering", rating: 4.8 },
-        { id: 3, name: "Michael Chen", expertise: "Full Stack Development", rating: 4.7 }
+        { id: 3, name: "Michael Chen", expertise: "Full Stack Development", rating: 4.7 },
+        { id: 4, name: "Love Babbar", expertise: "Data Analytics", rating: 4.5 }
     ];
 
     const handleDateChange = (e) => {

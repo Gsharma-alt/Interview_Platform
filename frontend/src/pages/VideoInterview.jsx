@@ -18,6 +18,11 @@ function VideoInterview() {
       text: 'What are your strengths and weaknesses?',
       answer: '',
     },
+    {
+      id: 4,
+      text: 'Why should we hire you ?',
+      answer: '',
+    },
   ]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -27,7 +32,7 @@ function VideoInterview() {
   const [stream, setStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [recordedBlobs, setRecordedBlobs] = useState([]);
-  
+
   const liveVideoRef = useRef(null);
   const playbackVideoRef = useRef(null);
 
@@ -37,14 +42,14 @@ function VideoInterview() {
     }
   }, [recording]);
 
-  
+
   useEffect(() => {
     if (stream && liveVideoRef.current) {
       liveVideoRef.current.srcObject = stream;
     }
   }, [stream, liveVideoRef]);
 
- 
+
   useEffect(() => {
     if (!recording && recordedBlobs.length > 0) {
       const blob = new Blob(recordedBlobs, { type: 'video/webm' });
@@ -53,7 +58,7 @@ function VideoInterview() {
     }
   }, [recording, recordedBlobs]);
 
-  
+
   useEffect(() => {
     return () => {
       if (stream) {
@@ -67,9 +72,9 @@ function VideoInterview() {
 
   const startRecording = async () => {
     try {
-      
+
       setRecordedBlobs([]);
-      
+
       const userStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setStream(userStream);
 
@@ -82,7 +87,7 @@ function VideoInterview() {
         }
       };
 
-      recorder.start(100); 
+      recorder.start(100);
     } catch (err) {
       console.error("Recording error:", err);
       setError('Failed to start recording. Please check your camera and microphone permissions.');
@@ -93,12 +98,12 @@ function VideoInterview() {
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
-      
-  
+
+
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
-      
+
       setRecording(false);
     }
   };
@@ -109,7 +114,7 @@ function VideoInterview() {
       if (recording) {
         stopRecording();
       }
-    
+
       setVideoUrl(null);
     }
   };
@@ -120,7 +125,7 @@ function VideoInterview() {
       if (recording) {
         stopRecording();
       }
- 
+
       setVideoUrl(null);
     }
   };
@@ -146,21 +151,21 @@ function VideoInterview() {
             </h2>
             <p className="text-purple-100 mb-8">{questions[currentQuestionIndex].text}</p>
 
-           
+
             {recording && (
               <div className="mt-6 bg-black rounded-lg overflow-hidden mb-6">
-                <video 
+                <video
                   ref={liveVideoRef}
-                  width="100%" 
-                  height="400" 
-                  autoPlay 
+                  width="100%"
+                  height="400"
+                  autoPlay
                   muted
                   className="mx-auto"
                 />
               </div>
             )}
 
-          
+
             {recording ? (
               <div className="flex justify-center items-center mb-6">
                 <div className="flex items-center bg-red-900 bg-opacity-50 px-4 py-2 rounded-lg">
@@ -183,16 +188,16 @@ function VideoInterview() {
               </button>
             )}
 
-            
+
             {videoUrl && !recording && (
               <div className="mt-8 mb-6">
                 <h3 className="text-lg font-semibold text-purple-300 mb-3">Your Recording:</h3>
                 <div className="bg-black rounded-lg overflow-hidden">
-                  <video 
+                  <video
                     ref={playbackVideoRef}
-                    src={videoUrl} 
-                    width="100%" 
-                    height="400" 
+                    src={videoUrl}
+                    width="100%"
+                    height="400"
                     controls
                     className="mx-auto"
                   />
@@ -204,11 +209,10 @@ function VideoInterview() {
               <button
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestionIndex === 0}
-                className={`inline-flex items-center px-8 py-4 rounded-full ${
-                  currentQuestionIndex > 0
+                className={`inline-flex items-center px-8 py-4 rounded-full ${currentQuestionIndex > 0
                     ? 'border border-purple-300 bg-transparent hover:bg-purple-900 hover:bg-opacity-40 text-white transition-all duration-300'
                     : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
-                }`}
+                  }`}
               >
                 <ChevronLeft className="mr-2 h-5 w-5" />
                 Previous Question
@@ -216,11 +220,10 @@ function VideoInterview() {
               <button
                 onClick={handleNextQuestion}
                 disabled={currentQuestionIndex === questions.length - 1}
-                className={`inline-flex items-center px-8 py-4 rounded-full ${
-                  currentQuestionIndex < questions.length - 1
+                className={`inline-flex items-center px-8 py-4 rounded-full ${currentQuestionIndex < questions.length - 1
                     ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
                     : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
-                }`}
+                  }`}
               >
                 Next Question
                 <ChevronRight className="ml-2 h-5 w-5" />
@@ -229,7 +232,7 @@ function VideoInterview() {
           </div>
         </div>
 
-      
+
         {error && (
           <div className="bg-red-900 bg-opacity-50 text-red-200 p-6 rounded-xl border border-red-700 mb-6">
             {error}
