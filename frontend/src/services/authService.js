@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5001/api';
 
 const getHeaders = (includeAuth = false) => {
     const headers = {
@@ -15,17 +15,45 @@ const getHeaders = (includeAuth = false) => {
     return headers;
 };
 
+const fetchWithRetry = async (url, options, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || `HTTP error! status: ${response.status}`);
+            }
+            return response;
+        } catch (error) {
+            if (i === retries - 1) {
+                console.error(`Request failed after ${retries} attempts:`, error);
+                throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+            }
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
+    }
+};
+
 export const register = async (userData) => {
     try {
-        const response = await fetch(`${API_URL}/auth/register`, {
+        const response = await fetchWithRetry(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(userData),
+            credentials: 'include'
         });
 
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Registration failed');
+
+        if (!data.token || !data.user) {
+            throw new Error('Invalid response from server');
         }
 
         // Store token and user data
@@ -34,30 +62,27 @@ export const register = async (userData) => {
         return data;
     } catch (error) {
         console.error('Registration error:', error);
-        throw error;
+        throw new Error(error.message || 'Failed to register. Please try again.');
     }
 };
 
 export const login = async (credentials) => {
     try {
-        const response = await fetch(`${API_URL}/auth/login`, {
+        const response = await fetchWithRetry(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify(credentials),
+            credentials: 'include'
         });
 
         const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || 'Login failed');
-        }
 
-        // Store token and user data
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         return data;
     } catch (error) {
         console.error('Login error:', error);
-        throw error;
+        throw new Error(error.message || 'Failed to login. Please check your credentials.');
     }
 };
 
@@ -79,7 +104,7 @@ export const isAuthenticated = () => {
     return !!getToken();
 };
 
-// Helper function to make authenticated API calls
+
 export const authenticatedFetch = async (endpoint, options = {}) => {
     const token = getToken();
     if (!token) {

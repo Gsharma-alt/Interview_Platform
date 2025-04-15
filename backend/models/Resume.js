@@ -25,9 +25,29 @@ const resumeSchema = new mongoose.Schema({
     uploadDate: {
         type: Date,
         default: Date.now
+    },
+    analysisResults: {
+        atsScore: {
+            type: Number,
+            required: true
+        },
+        issues: [{
+            title: String,
+            description: String,
+            suggestion: String
+        }],
+        strengths: [{
+            title: String,
+            description: String
+        }],
+        questions: [String],
+        analyzedDate: {
+            type: Date,
+            default: Date.now
+        }
     }
 });
 
 const Resume = mongoose.model('Resume', resumeSchema);
 
-export default Resume; 
+export default Resume;

@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check if user is logged in by checking both user and token
         const storedUser = getCurrentUser();
         const storedToken = getToken();
 

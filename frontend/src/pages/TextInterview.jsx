@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { MessageSquare, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -10,14 +11,16 @@ function TextInterview() {
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [error, setError] = useState(null);
+  const [selectedRole, setSelectedRole] = useState('Software Engineer');
+  const roles = ['Software Engineer', 'Data Analyst', 'Marketing', 'Business Analyst', 'Cloud Computing', 'DevOps', 'Product Manager', 'UX Designer'];
 
   const genAI = new GoogleGenerativeAI("AIzaSyAskR1GqZzlZXYfZO4kmFt37PN9zAAvyPs");
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = async (role) => {
     try {
       setLoading(true);
-      const prompt = 'Generate 5 interview questions for a software engineer role.';
+      const prompt = `Generate 5 interview questions for a ${role} role.`;
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
       setQuestions(responseText.split('\n').filter((q) => q.trim() !== ''));
@@ -29,8 +32,8 @@ function TextInterview() {
   };
 
   useEffect(() => {
-    fetchQuestions();
-  }, []);
+    fetchQuestions(selectedRole);
+  }, [selectedRole]);
 
   const handleSubmitAnswer = async () => {
     try {
@@ -71,6 +74,25 @@ function TextInterview() {
           Perfect your responses with AI-powered feedback and coaching
         </p>
 
+        <div className="mb-6">
+          <label className="block text-purple-200 mb-2" htmlFor="job-role">Select Job Role:</label>
+          <select
+            id="job-role"
+            value={selectedRole}
+            onChange={(e) => {
+              setSelectedRole(e.target.value);
+              setCurrentQuestionIndex(0);
+              setAnswer('');
+              setAiResponse('');
+            }}
+            className="w-full p-4 border border-indigo-700 rounded-lg bg-indigo-900 bg-opacity-50 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500"
+          >
+            {roles.map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))}
+          </select>
+        </div>
+
         {loading ? (
           <div className="flex justify-center items-center p-12">
             <Loader className="animate-spin h-12 w-12 text-purple-300" />
@@ -82,7 +104,6 @@ function TextInterview() {
           </div>
         ) : (
           <>
-
             {questions.length > 0 && (
               <div className="relative p-1 mb-12">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl opacity-75 blur-sm"></div>
@@ -107,8 +128,8 @@ function TextInterview() {
                     onClick={handleSubmitAnswer}
                     disabled={!answer.trim()}
                     className={`mt-4 px-8 py-4 rounded-full ${answer.trim()
-                        ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
-                        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
+                      : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       }`}
                   >
                     Submit Answer
@@ -131,8 +152,8 @@ function TextInterview() {
                 onClick={handlePreviousQuestion}
                 disabled={currentQuestionIndex === 0}
                 className={`inline-flex items-center px-8 py-4 rounded-full ${currentQuestionIndex > 0
-                    ? 'border border-purple-300 bg-transparent hover:bg-purple-900 hover:bg-opacity-40 text-white transition-all duration-300'
-                    : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
+                  ? 'border border-purple-300 bg-transparent hover:bg-purple-900 hover:bg-opacity-40 text-white transition-all duration-300'
+                  : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
                   }`}
               >
                 <ChevronLeft className="mr-2 h-5 w-5" />
@@ -142,8 +163,8 @@ function TextInterview() {
                 onClick={handleNextQuestion}
                 disabled={currentQuestionIndex === questions.length - 1}
                 className={`inline-flex items-center px-8 py-4 rounded-full ${currentQuestionIndex < questions.length - 1
-                    ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
-                    : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
+                  ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
+                  : 'bg-indigo-800 text-indigo-400 cursor-not-allowed opacity-50'
                   }`}
               >
                 Next Question

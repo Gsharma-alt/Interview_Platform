@@ -10,6 +10,7 @@ import Signup from './pages/Signup';
 import TextInterview from './pages/TextInterview';
 import VideoInterview from './pages/VideoInterview';
 import Analytics from './pages/Analytics';
+import Scheduler from './pages//Scheduler';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -28,6 +29,7 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path='/textInterview' element={<TextInterview />} />
               <Route path='/videoInterview' element={<VideoInterview />} />
+              <Route path='/scheduler' element={<Scheduler />} />
               <Route path='/analytics' element={
                 <ProtectedRoute>
                   <Analytics />
