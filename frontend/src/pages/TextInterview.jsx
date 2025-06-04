@@ -12,6 +12,7 @@
 //   const [aiResponse, setAiResponse] = useState('');
 //   const [error, setError] = useState(null);
 //   const [selectedRole, setSelectedRole] = useState('Software Engineer');
+//   const [responses, setResponses] = useState([]);
 //   const roles = ['Software Engineer', 'Data Analyst', 'Marketing', 'Business Analyst', 'Cloud Computing', 'DevOps', 'Product Manager', 'UX Designer'];
 
 //   const genAI = new GoogleGenerativeAI("AIzaSyAskR1GqZzlZXYfZO4kmFt37PN9zAAvyPs");
@@ -40,7 +41,18 @@
 //       setLoading(true);
 //       const prompt = `Evaluate this answer: "${answer}" and provide feedback.`;
 //       const result = await model.generateContent(prompt);
-//       setAiResponse(result.response.text());
+//       const feedback = result.response.text();
+
+//       setResponses(prevResponses => [
+//         ...prevResponses,
+//         {
+//           question: questions[currentQuestionIndex],
+//           answer: answer,
+//           feedback: feedback,
+//         },
+//       ]);
+
+//       setAiResponse(feedback);
 //     } catch (err) {
 //       setError('Failed to process your answer. Please try again.');
 //     } finally {
@@ -64,6 +76,22 @@
 //     }
 //   };
 
+//   const generateReport = () => {
+//     const reportContent = responses.map((response, index) => `
+//       Question ${index + 1}: ${response.question}
+//       Your Answer: ${response.answer}
+//       AI Feedback: ${response.feedback}
+//     `).join('\n\n');
+
+//     const blob = new Blob([reportContent], { type: 'text/plain' });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement('a');
+//     a.href = url;
+//     a.download = 'interview_report.txt';
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
 //   return (
 //     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-800 to-indigo-900 text-white pt-20 pb-16">
 //       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -84,6 +112,7 @@
 //               setCurrentQuestionIndex(0);
 //               setAnswer('');
 //               setAiResponse('');
+//               setResponses([]);
 //             }}
 //             className="w-full p-4 border border-indigo-700 rounded-lg bg-indigo-900 bg-opacity-50 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500"
 //           >
@@ -171,28 +200,43 @@
 //                 <ChevronRight className="ml-2 h-5 w-5" />
 //               </button>
 //             </div>
+
+//             {responses.length > 0 && (
+//               <button
+//                 onClick={generateReport}
+//                 className=" mt-4 px-8 py-4 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg transition-all duration-300"
+//               >
+//                 Generate Report
+//               </button>
+//             )}
 //           </>
 //         )}
 //       </div>
 //     </div>
 //   );
 // }
+
 // export default TextInterview;
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { MessageSquare, Loader, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, Loader, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { jsPDF } from 'jspdf';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 function TextInterview() {
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState('');
+  const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState('');
   const [error, setError] = useState(null);
   const [selectedRole, setSelectedRole] = useState('Software Engineer');
-  const [responses, setResponses] = useState([]); // New state for storing responses
+  const [responses, setResponses] = useState([]);
+  const [reportGenerated, setReportGenerated] = useState(false);
+
   const roles = ['Software Engineer', 'Data Analyst', 'Marketing', 'Business Analyst', 'Cloud Computing', 'DevOps', 'Product Manager', 'UX Designer'];
 
   const genAI = new GoogleGenerativeAI("AIzaSyAskR1GqZzlZXYfZO4kmFt37PN9zAAvyPs");
@@ -204,7 +248,11 @@ function TextInterview() {
       const prompt = `Generate 5 interview questions for a ${role} role.`;
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
-      setQuestions(responseText.split('\n').filter((q) => q.trim() !== ''));
+      setQuestions(responseText
+        .split('\n')
+        .map(q => q.replace(/^\d+[\).\s-]?\s*/, ''))
+        .filter(q => q.trim() !== '')
+      );
     } catch (err) {
       setError('Failed to fetch questions. Please try again.');
     } finally {
@@ -219,16 +267,25 @@ function TextInterview() {
   const handleSubmitAnswer = async () => {
     try {
       setLoading(true);
-      const prompt = `Evaluate this answer: "${answer}" and provide feedback.`;
+      const prompt = `You're an AI interview coach. Evaluate the following candidate answer to the question: "${questions[currentQuestionIndex]}".
+
+Candidate Answer:
+"${answer}"
+
+Provide constructive feedback including:
+- Strengths
+- Areas of improvement
+- Suggestions to improve the answer.`;
+
       const result = await model.generateContent(prompt);
       const feedback = result.response.text();
 
-      setResponses(prevResponses => [
-        ...prevResponses,
+      setResponses(prev => [
+        ...prev,
         {
           question: questions[currentQuestionIndex],
-          answer: answer,
-          feedback: feedback,
+          answer,
+          feedback,
         },
       ]);
 
@@ -242,35 +299,47 @@ function TextInterview() {
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setAnswer('');
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      setAnswer(answers[nextIndex] || '');
       setAiResponse('');
     }
   };
 
   const handlePreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      setAnswer('');
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      setAnswer(answers[prevIndex] || '');
       setAiResponse('');
     }
   };
 
-  const generateReport = () => {
-    const reportContent = responses.map((response, index) => `
-      Question ${index + 1}: ${response.question}
-      Your Answer: ${response.answer}
-      AI Feedback: ${response.feedback}
-    `).join('\n\n');
+  const generatePDFReport = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Interview Practice Report", 20, 20);
+    doc.setFontSize(12);
 
-    const blob = new Blob([reportContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'interview_report.txt';
-    a.click();
-    URL.revokeObjectURL(url);
+    responses.forEach((res, index) => {
+      const yOffset = 30 + index * 50;
+      doc.text(`Q${index + 1}: ${res.question}`, 20, yOffset);
+      doc.text(`Answer: ${res.answer}`, 20, yOffset + 10);
+      doc.text("Feedback:", 20, yOffset + 20);
+      doc.text(doc.splitTextToSize(res.feedback, 170), 20, yOffset + 30);
+    });
+
+    doc.save('interview_report.pdf');
+    setReportGenerated(true);
   };
+
+  const statsData = [
+    { name: 'Total Questions', value: questions.length },
+    { name: 'Answered', value: Object.keys(answers).length },
+    { name: 'Feedbacks', value: responses.length },
+  ];
+
+  const score = ((responses.length / questions.length) * 100).toFixed(0);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-purple-800 to-indigo-900 text-white pt-20 pb-16">
@@ -291,8 +360,10 @@ function TextInterview() {
               setSelectedRole(e.target.value);
               setCurrentQuestionIndex(0);
               setAnswer('');
+              setAnswers({});
               setAiResponse('');
               setResponses([]);
+              setReportGenerated(false);
             }}
             className="w-full p-4 border border-indigo-700 rounded-lg bg-indigo-900 bg-opacity-50 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500"
           >
@@ -326,22 +397,26 @@ function TextInterview() {
                   <p className="text-purple-100 mb-6">{questions[currentQuestionIndex]}</p>
 
                   <textarea
-                    className="w-full p-4 border border-indigo-700 rounded-lg bg-indigo-900 bg-opacity-50 text-white focus:outline-none focus:ring focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full p-4 border border-indigo-700 rounded-lg bg-indigo-900 bg-opacity-50 text-white"
                     rows={5}
                     value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
+                    onChange={(e) => {
+                      const newAnswer = e.target.value;
+                      setAnswer(newAnswer);
+                      setAnswers({ ...answers, [currentQuestionIndex]: newAnswer });
+                    }}
                     placeholder="Type your answer here..."
                   />
 
                   <button
                     onClick={handleSubmitAnswer}
-                    disabled={!answer.trim()}
-                    className={`mt-4 px-8 py-4 rounded-full ${answer.trim()
+                    disabled={!answer.trim() || loading}
+                    className={`mt-4 px-8 py-4 rounded-full ${answer.trim() && !loading
                       ? 'bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1'
                       : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       }`}
                   >
-                    Submit Answer
+                    {loading ? 'Submitting...' : 'Submit Answer'}
                   </button>
 
                   {aiResponse && (
@@ -383,11 +458,37 @@ function TextInterview() {
 
             {responses.length > 0 && (
               <button
-                onClick={generateReport}
-                className=" mt-4 px-8 py-4 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg transition-all duration-300"
+                onClick={generatePDFReport}
+                className="mt-8 px-8 py-4 rounded-full bg-gradient-to-r from-green-400 to-green-500 text-white shadow-lg transition-all duration-300"
               >
-                Generate Report
+                Generate PDF Report
               </button>
+            )}
+
+            {reportGenerated && (
+              <div className="mt-10 bg-indigo-900 bg-opacity-60 p-6 rounded-xl border border-purple-700">
+                <div className="flex items-center mb-4">
+                  <BarChart2 className="h-6 w-6 text-green-300 mr-2" />
+                  <h3 className="text-xl font-semibold text-green-300">Quick Stats</h3>
+                </div>
+                <ul className="text-purple-100 space-y-2 mb-6">
+                  <li>Total Questions: {questions.length}</li>
+                  <li>Questions Answered: {Object.keys(answers).length}</li>
+                  <li>AI Feedbacks Received: {responses.length}</li>
+                  <li>Score: {score}%</li>
+                </ul>
+                <div style={{ width: '100%', height: 300 }}>
+                  <ResponsiveContainer>
+                    <BarChart data={statsData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#a78bfa" radius={[10, 10, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             )}
           </>
         )}

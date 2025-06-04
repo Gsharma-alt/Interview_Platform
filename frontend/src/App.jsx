@@ -11,6 +11,7 @@ import TextInterview from './pages/TextInterview';
 import VideoInterview from './pages/VideoInterview';
 import Analytics from './pages/Analytics';
 import Scheduler from './pages//Scheduler';
+import Quiz from './pages/Quiz'
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 
@@ -29,6 +30,7 @@ function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path='/textInterview' element={<TextInterview />} />
               <Route path='/videoInterview' element={<VideoInterview />} />
+              <Route path="/quiz" element={<Quiz />} />
               <Route path='/scheduler' element={<Scheduler />} />
               <Route path='/analytics' element={
                 <ProtectedRoute>

@@ -81,7 +81,7 @@ function Analytics() {
       skills: ['skills', 'technical', 'proficient', 'expertise', 'abilities', 'competencies'],
       experience: ['experience', 'work history', 'employment', 'career', 'professional'],
       education: ['education', 'degree', 'university', 'college', 'school', 'graduated'],
-      achievements: ['achievements', 'accomplishments', 'awards', 'certifications', 'projects']
+      achievements: ['achievements', 'accomplishments', 'awards', 'certifications', 'projects', 'achieved']
     };
 
     let score = 0;
@@ -192,7 +192,7 @@ function Analytics() {
 
       setAnalysis(analysisResult);
       setUploadStatus('Analysis complete!');
-      fetchResumes(); // Refresh the resume list
+      fetchResumes();
     } catch (error) {
       console.error('Error during resume analysis:', error);
       setError(error.message);
@@ -280,8 +280,8 @@ function Analytics() {
                 onClick={handleUpload}
                 disabled={!file || loading}
                 className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${!file || loading
-                    ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-purple-600 hover:bg-purple-700'
+                  ? 'bg-gray-600 cursor-not-allowed'
+                  : 'bg-purple-600 hover:bg-purple-700'
                   }`}
               >
                 {loading ? (
@@ -312,8 +312,8 @@ function Analytics() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3 }}
                     className={`p-4 rounded-lg cursor-pointer transition-colors ${selectedResumeId === resume._id
-                        ? 'bg-purple-600/50 border border-purple-500'
-                        : 'bg-indigo-800/50 hover:bg-indigo-800/70'
+                      ? 'bg-purple-600/50 border border-purple-500'
+                      : 'bg-indigo-800/50 hover:bg-indigo-800/70'
                       }`}
                     onClick={() => handleResumeClick(resume._id)}
                   >
