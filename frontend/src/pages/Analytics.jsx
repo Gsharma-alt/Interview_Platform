@@ -26,7 +26,7 @@ function Analytics() {
 
   const fetchResumes = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/resumes', {
+      const response = await fetch('https://interview-platform-5db3.onrender.com/api/resumes', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -177,7 +177,7 @@ function Analytics() {
       const formData = new FormData();
       formData.append('resume', file);
 
-      const response = await fetch('http://localhost:5001/api/resume-upload', {
+      const response = await fetch('https://interview-platform-5db3.onrender.com/api/resume-upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -206,7 +206,7 @@ function Analytics() {
     setSelectedResumeId(resumeId);
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5001/api/resumes/${resumeId}/analysis`, {
+      const response = await fetch(`https://interview-platform-5db3.onrender.com/api/resumes/${resumeId}/analysis`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
